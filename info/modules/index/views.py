@@ -1,7 +1,9 @@
 from . import index_blu
+from flask import render_template
 
 
 # 测试
 @index_blu.route('/')
 def index():
-    return '<h1>index-text</h1>'
+    data = {}
+    return render_template("/news/index.html", data=data)
