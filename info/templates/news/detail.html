@@ -1,0 +1,54 @@
+{% extends './news/base.html' %}
+
+{% block titleBlock %}
+    文章详情页
+{% endblock %}
+
+{% block scriptBlock %}
+    <script type="text/javascript" src="../../static/news/js/detail.js"></script>
+{% endblock %}
+
+{% block categoryblock %}
+
+{% endblock %}
+
+{% block contentblock %}
+    <div class="detail_con fl">
+    <h3>{{ data.news.title }}</h3>
+    <div class="detail_about clearfix">
+        <span class="time_souce fl">{{ data.news.create_time }} 来源: {{ data.news.source }}</span>
+        <span class="comment fr">{{ data.news.comments_count }}</span>
+    </div>
+    {{ data.news.content | safe }}
+    ...
+        {% if data.user %}
+            <form action="" class="comment_form" data-newsid="{{ data.news.id }}">
+                <div class="person_pic">
+                    <img src="{% if data.user.avatar_url %}
+                    {{ data.user.avatar_url }}
+                {% else %}
+                    ../../static/news/images/person01.png
+                {% endif %}" alt="用户图标">
+                </div>
+                <textarea placeholder="请发表您的评论" class="comment_input"></textarea>
+                <input type="submit" name="" value="评 论" class="comment_sub">
+            </form>
+        {% else %}
+            <div class="comment_form_logout">
+                登录发表你的评论
+            </div>
+        {% endif %}
+
+        <div class="comment_count">
+            {{ data.news.comments_count }}条评论
+        </div>
+       ...
+    </div>
+
+{% endblock %}
+
+{% block authorblock %}
+    <div class="author_card">
+        ...
+    </div>
+{% endblock %}
