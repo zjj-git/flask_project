@@ -612,14 +612,15 @@ body{
 
 .collection{
     /*display:inline-block;;*/
-    width:98px;
+    width:100px;
+    /*height: 36px;*/
     line-height:34px;
     text-indent:45px;
     border:1px solid #3791ef;
     color:#3791ef;
     border-radius:4px;
     font-size:14px;
-    /*margin:0px 5px;*/
+    margin:0px 339px;
     background:url(../images/collect_icons.png) 21px 7px no-repeat;
     overflow:hidden;
 }
@@ -656,13 +657,13 @@ body{
 
 
 .collected{
-    display:inline-block;
+    display:block;
     width:100px;
     height:36px;
     color:#666;
     border-radius:4px;
     font-size:14px;
-    margin:0px 5px;
+    margin:0px 339px;
     background:url(../images/collect_icons.png) 15px -73px no-repeat #e6e6e6;
     position:relative;
     overflow:hidden;

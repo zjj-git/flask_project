@@ -10,6 +10,7 @@ function updateCommentCount() {
 }
 
 $(function(){
+    updateCommentCount()
 
     // 打开登录框
     $('.comment_form_logout').click(function () {
