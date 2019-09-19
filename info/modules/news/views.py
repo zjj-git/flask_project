@@ -46,7 +46,6 @@ def news_detail(news_id):
             "is_collected": is_collected,
             "comments": comments
             }
-    print(data)
 
     return render_template('news/detail.html', data=data)
 
@@ -105,6 +104,7 @@ def add_news_comment():
     # 获取参数
     news_id = request.json.get("news_id")
     news_comment = request.json.get("comment")
+    parent_id = request.json.get("parent_id")
 
     # 判断参数是否正确
     if not all([news_id, news_comment]):
@@ -122,7 +122,8 @@ def add_news_comment():
     comment.user_id = user.id
     comment.news_id = news_id
     comment.content = news_comment
+    comment.parent_id = parent_id
     db.session.add(comment)
     db.session.commit()
     # 返回响应
-    return jsonify(errno=RET.DBERR, errmsg="评论成功", data=comment.to_dict())
+    return jsonify(errno=RET.OK, errmsg="评论成功", data=comment.to_dict())
