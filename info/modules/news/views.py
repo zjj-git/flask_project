@@ -1,7 +1,7 @@
 from flask import render_template, g, abort, request, jsonify
 
 from info import constants, db
-from info.models import News, Comment
+from info.models import News, Comment, CommentLike
 from info.modules.news import news_blu
 from info.response_code import RET
 from info.utils.common import user_login_data
@@ -31,20 +31,31 @@ def news_detail(news_id):
     # 获取当前新闻最新的评论,按时间排序
     new_comment = Comment.query.filter(Comment.news_id == new_info.id).order_by(Comment.create_time.desc()).all()
 
-    comments = []
-    for comment in new_comment:
-        comments.append(comment.to_dict())  # 拿到的是对象的list,需要将每个对象通过to_dict()方法进行拼接(拼接过程会添加user对象)
-
+    # 如果用户登陆
+    comment_like_ids = list()
     if user:
         if new_info in user.collection_news:
             is_collected = True
+
+        comment_like_ids = [i.comment_id for i in CommentLike.query.filter(CommentLike.user_id == user.id)]
+
+    comment_dict_list = []
+    for comment in new_comment:
+        comment_dict = comment.to_dict()  # 拿到的是对象的list,需要将每个对象通过to_dict()方法进行拼接(拼接过程会添加user对象)
+
+        # 为评论增加'is_like'字段,判断是否评论
+        comment_dict['is_like'] = False
+        # 判断用户是否在点赞评论里
+        if comment.id in comment_like_ids:
+            comment_dict["is_like"] = True
+        comment_dict_list.append(comment_dict)
 
     # 返回数据
     data = {"user": user.to_dict() if user else None,
             "news": new_info,
             "news_dict": new_clicks,
             "is_collected": is_collected,
-            "comments": comments
+            "comments": comment_dict_list
             }
 
     return render_template('news/detail.html', data=data)
@@ -127,3 +138,59 @@ def add_news_comment():
     db.session.commit()
     # 返回响应
     return jsonify(errno=RET.OK, errmsg="评论成功", data=comment.to_dict())
+
+
+@news_blu.route('/comment_like', methods=["POST"])
+@user_login_data
+def comment_like():
+    """
+    评论点赞
+    :return:
+    """
+    # 用户是否登陆
+    user = g.user
+
+    if not user:
+        return jsonify(errno=RET.LOGINERR, errmsg="请先进行登录")
+
+    # 取到请求参数
+    comment_id = request.json.get("comment_id")
+    action = request.json.get("action")
+
+    # 判断参数
+    if not all([comment_id, action]):
+        return jsonify(errno=RET.DATAERR, errmsg="参数不完整")
+
+    if action not in ["add", "remove"]:
+        return jsonify(errno=RET.DATAERR, errmsg="action:参数错误")
+
+    # 获取到要被点赞的评论模型
+    commentLike = CommentLike()
+
+    # 点赞评论
+    comment_like_info = Comment.query.get(comment_id)
+
+    # action的状态,如果点赞,则查询后将用户id和评论id添加到数据库
+    if action == "add":
+        commentLike.user_id = user.id
+        commentLike.comment_id = comment_id
+
+        # 更新点赞次数
+        comment_like_info.like_count += 1
+        db.session.add(commentLike)
+        db.session.commit()
+
+    # 取消点赞评论,查询数据库,如果以点赞,则删除点赞信息
+    else:
+        commentLike = CommentLike.query.filter(CommentLike.comment_id == comment_id).first()
+        if not commentLike:
+            return jsonify(errno=RET.DBERR, errmsg="点赞信息获取失败")
+
+        db.session.delete(commentLike)
+
+        # 更新点赞次数
+        comment_like_info.like_count -= 1
+        db.session.commit()
+
+    # 返回结果
+    return jsonify(errno=RET.OK, errmsg="点赞/取消点赞成功")
