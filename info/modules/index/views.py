@@ -54,7 +54,7 @@ def news_list():
         per_page = int(per_page)
     # 默认选择最新数据分类
     # 3. 查询数据
-    filters = []
+    filters = [News.status == 0]
     if cid != 1:
         filters.append(News.category_id == cid)
 

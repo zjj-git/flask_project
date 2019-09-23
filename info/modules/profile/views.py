@@ -2,6 +2,7 @@ from flask import render_template, g, redirect, request, jsonify
 
 from info import db
 from info.constants import HOME_PAGE_MAX_NEWS
+from info.models import Category, News
 from info.modules.profile import profile_blu
 from info.response_code import RET
 from info.utils.common import user_login_data
@@ -69,7 +70,6 @@ def pic_info():
 
     # 如果是POST请求表示修改头像
     # 1. 获取到上传的图片
-
 
     # 2. 上传头像
 
@@ -142,3 +142,70 @@ def user_collection():
             "current_page": current_page,
             "total_page": total_page}
     return render_template('news/user_collection.html', data=data)
+
+
+@profile_blu.route('/news_release', methods=["GET", "POST"])
+@user_login_data
+def news_release():
+    # GET请求
+    if request.method == "GET":
+
+        # 1. 加载新闻分类数据
+        # 2. 移除最新分类
+        categories = Category.query.filter(Category.id > 1).all()
+
+        # 返回数据
+        data = {"categories": categories}
+        return render_template("news/user_news_release.html", data=data)
+
+    # 1. 获取要提交的数据
+    if request.method == "POST":
+        title = request.form.get("title")
+        category_id = request.form.get("category_id")
+        digest = request.form.get("digest")
+        index_image = request.files.get("index_image")
+        content = request.form["content"]
+
+        # 校验参数
+        if not all([title, category_id, digest, content]):
+            return jsonify(errno=RET.DATAERR, errmsg="发布新闻信息不完整")
+
+        # 3.取到图片，将图片上传到七牛云
+        # try:
+        #     index_image_data = index_image.read()
+        #     # 上传到七牛云
+        #     key = storage(index_image_data)
+        # except Exception as e:
+        #     current_app.logger.error(e)
+        #     return jsonify(errno=RET.PARAMERR, errmsg="参数有误")
+
+        # 保存数据
+        news = News()
+        news.title = title
+        news.category_id = category_id
+        news.digest = digest
+        news.content = content
+        news.source = "个人发布"
+
+        # 新闻状态,将新闻设置为1代表待审核状态
+        news.status = 1
+        # 手动设置新闻状态,在返回前commit提交
+        db.session.add(news)
+        db.session.commit()
+
+        # 返回
+        return jsonify(errno=RET.OK, errmsg="发布成功")
+
+
+@profile_blu.route('/news_list')
+@user_login_data
+def user_news_list():
+    # 查询数据
+    person_news = News.query.filter(News.source == "个人发布").all()
+    news_list = []
+    for i in person_news:
+        news_list.append(i)
+
+    # 返回数据
+    data = {"news_list": news_list}
+    return render_template('news/user_news_list.html', data=data)
