@@ -1126,7 +1126,7 @@ body{
 }
 
 .article_list li a:before{
-    content:"· ";
+    /*content:"· ";*/
     color:#1482f0;
     font-size:40px;
     position:absolute;
