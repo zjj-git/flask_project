@@ -68,8 +68,3 @@ class CCP(object):
             # 返回-1 表示发送失败
             return -1
 
-
-if __name__ == '__main__':
-    ccp = CCP()
-    # 注意： 测试的短信模板编号为1
-    ccp.send_template_sms('13572206937', ['1234', 5], 1)

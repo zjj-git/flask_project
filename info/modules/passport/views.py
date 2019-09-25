@@ -79,7 +79,7 @@ def send_sms_code():
 
     # 6. 发送短信验证码
     print(phone_msg)
-    CCP().send_template_sms(mobile, [phone_msg, constants.SMS_CODE_REDIS_EXPIRES/5], '1')
+    CCP().send_template_sms(mobile, [phone_msg, 5], '1')
 
     # 保存验证码内容到redis
     redis_store.setex(mobile, constants.SMS_CODE_REDIS_EXPIRES, phone_msg)
