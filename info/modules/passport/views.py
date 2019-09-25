@@ -4,8 +4,10 @@ import re
 from flask import request, current_app, abort, make_response, jsonify, session, render_template
 
 from info import redis_store, constants, db
+from info.constants import SMS_CODE_REDIS_EXPIRES
 from info.models import User
 from info.response_code import RET
+from info.utils.yuntongxun.sms import CCP
 from . import passport_blu
 from info.utils.captcha.captcha import captcha
 
@@ -77,6 +79,7 @@ def send_sms_code():
 
     # 6. 发送短信验证码
     print(phone_msg)
+    CCP().send_template_sms(mobile, [phone_msg, constants.SMS_CODE_REDIS_EXPIRES/5], '1')
 
     # 保存验证码内容到redis
     redis_store.setex(mobile, constants.SMS_CODE_REDIS_EXPIRES, phone_msg)
