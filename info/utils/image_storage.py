@@ -1,9 +1,9 @@
 from qiniu import Auth, put_data
 
-access_key = 'Q3l0L4uo8vTXvLs6UacKg3xHykxxhoZSzmFIlf6w'
-secret_key = 'r8Bn58sGxNz1jcD2HY8tbTEiZwecBOg1eZgDcIB3'
+access_key = 'jfqPjtmymYc5o1KVOOt1m4cLmX5AEeCaM5Ccnw5q'
+secret_key = 'oTX1HPerW1ZEYzz0Hv7pG_4RGYGoxouBcdsihQep'
 # 七牛云创建的储存空间名称
-bucket_name = 'news_info'
+bucket_name = 'zjj-flask'
 
 
 def storage(data):
@@ -19,8 +19,3 @@ def storage(data):
         raise Exception('上传图片失败')
     return ret['key']
 
-
-if __name__ == '__main__':
-    file = input('请输入路径')
-    with open(file, 'rb') as f:
-        storage(f.read())

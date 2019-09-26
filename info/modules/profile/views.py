@@ -1,11 +1,12 @@
-from flask import render_template, g, redirect, request, jsonify, current_app, abort
+from flask import render_template, g, redirect, request, jsonify, current_app, abort, make_response
 
 from info import db, constants
-from info.constants import HOME_PAGE_MAX_NEWS
+from info.constants import HOME_PAGE_MAX_NEWS, QINIU_DOMIN_PREFIX
 from info.models import Category, News, User
 from info.modules.profile import profile_blu
 from info.response_code import RET
 from info.utils.common import user_login_data
+from info.utils.image_storage import storage
 
 
 @profile_blu.route('/info')
@@ -20,6 +21,7 @@ def user_info():
         return redirect("/")
 
     data = {"user": user.to_dict() if user else None}
+    print(data)
     return render_template("news/user.html", data=data)
 
 
@@ -62,7 +64,6 @@ def base_info():
 @profile_blu.route('/pic_info', methods=["GET", "POST"])
 @user_login_data
 def pic_info():
-    user = g.user
     # 如果是GET请求,返回用户数据
     user = g.user
     if request.method == "GET":
@@ -70,13 +71,18 @@ def pic_info():
 
     # 如果是POST请求表示修改头像
     # 1. 获取到上传的图片
-
-    # 2. 上传头像
-
+    if request.method == "POST":
+        # 2. 上传头像
+        avatar = request.files.get("avatar")
         # 使用自已封装的storage方法去进行图片上传
+        avatar_image_key = storage(avatar.read())
+        # 3. 保存头像地址
+        user.avatar_url = avatar_image_key
+        # 拼接url并返回数据
+        db.session.add(user)
+        db.session.commit()
 
-    # 3. 保存头像地址
-    # 拼接url并返回数据
+        return jsonify(errno=RET.OK, errmsg="更换成功", data={"avatar_url": user.avatar_url})
 
 
 @profile_blu.route('/pass_info', methods=["GET", "POST"])
@@ -172,13 +178,13 @@ def news_release():
             return jsonify(errno=RET.DATAERR, errmsg="发布新闻信息不完整")
 
         # 3.取到图片，将图片上传到七牛云
-        # try:
-        #     index_image_data = index_image.read()
-        #     # 上传到七牛云
-        #     key = storage(index_image_data)
-        # except Exception as e:
-        #     current_app.logger.error(e)
-        #     return jsonify(errno=RET.PARAMERR, errmsg="参数有误")
+        try:
+            index_image_data = index_image.read()
+            # 上传到七牛云
+            key = storage(index_image_data)
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.PARAMERR, errmsg="参数有误")
 
         # 保存数据
         news = News()
@@ -188,6 +194,7 @@ def news_release():
         news.content = content
         news.source = "个人发布"
         news.user_id = user.id
+        news.index_image_url = constants.QINIU_DOMIN_PREFIX + "/" + key
 
         # 新闻状态,将新闻设置为1代表待审核状态
         news.status = 1

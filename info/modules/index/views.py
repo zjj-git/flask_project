@@ -24,7 +24,7 @@ def index():
     category = Category.query.all()
 
     # 返回给前端查询结果
-    data = {"user": user,
+    data = {"user": user.to_dict() if user else "",
             "news_dict": new_clicks,
             "categories": category}
 
