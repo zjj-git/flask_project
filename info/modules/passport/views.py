@@ -152,7 +152,7 @@ def login():
     # 3. 校验密码
     if not db_user.check_password(password):
         return jsonify(errno=RET.NODATA, errmsg="用户密码错误")
-        # 4. 保存用户登录状态
+    # 4. 保存用户登录状态
     session["user_id"] = db_user.id
     session["user_nick_name"] = db_user.nick_name
     # 5. 登录成功返回

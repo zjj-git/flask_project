@@ -53,6 +53,8 @@ def base_info():
             user.nick_name = nick_name
 
         if gender == "":
+            user.gender = user.gender
+        else:
             user.gender = gender
 
         db.session.commit()
